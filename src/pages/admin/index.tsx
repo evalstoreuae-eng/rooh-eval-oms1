@@ -1,3 +1,11 @@
+
+/*
+  Simple authentication wrapper for /admin page.
+  - username: admin
+  - password: admin123
+  Session is stored in localStorage key 'rooh:admin-auth' as JSON { user: 'admin', createdAt }
+*/
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
@@ -24,6 +32,19 @@ type Invoice = {
 const UAE_CITIES = ['أبوظبي', 'دبي', 'الشارقة', 'العيـن', 'رأس الخيمة', 'عجمان', 'أم القيوين', 'الفجيرة'];
 
 export default function AdminPage() {
+  const [authenticated, setAuthenticated] = useState<boolean>(() => {
+    try {
+      const raw = localStorage.getItem('rooh:admin-auth');
+      return !!raw;
+    } catch {
+      return false;
+    }
+  });
+
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
   const [employees, setEmployees] = useState<Person[]>(() => {
     try {
       const raw = localStorage.getItem('rooh:employees');
@@ -160,9 +181,55 @@ export default function AdminPage() {
 
   const removeInvoice = (id: string) => setInvoices(invoices.filter(i => i.id !== id));
 
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (username === 'admin' && password === 'admin123') {
+      localStorage.setItem('rooh:admin-auth', JSON.stringify({ user: 'admin', createdAt: new Date().toISOString() }));
+      setAuthenticated(true);
+      setUsername('');
+      setPassword('');
+    } else {
+      setError('اسم المستخدم أو كلمة المرور غير صحيحة');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('rooh:admin-auth');
+    setAuthenticated(false);
+  };
+
+  if (!authenticated) {
+    return (
+      <div style={{ padding: 24, fontFamily: 'Cairo, Tajawal, sans-serif', direction: 'rtl' }}>
+        <h1>تسجيل الدخول إلى لوحة الإدارة</h1>
+        <form onSubmit={handleLogin} style={{ maxWidth: 360 }}>
+          <div>
+            <label>اسم المستخدم</label>
+            <input value={username} onChange={(e) => setUsername(e.target.value)} />
+          </div>
+          <div>
+            <label>كلمة المرور</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </div>
+          {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
+          <div style={{ marginTop: 12 }}>
+            <button type="submit">تسجيل الدخول</button>
+          </div>
+        </form>
+        <div style={{ marginTop: 12 }}>
+          <p>بيانات الدخول التجريبية: admin / admin123</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: 24, fontFamily: 'Cairo, Tajawal, sans-serif', direction: 'rtl' }}>
       <h1>لوحة الإدارة (تجريبية)</h1>
+      <div style={{ marginBottom: 12 }}>
+        <button onClick={handleLogout}>تسجيل الخروج</button>
+      </div>
 
       <section style={{ marginTop: 16 }}>
         <h2>الموظفين والشركاء</h2>
