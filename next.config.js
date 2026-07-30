@@ -1,11 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  output: 'export',
   images: {
     unoptimized: true,
   },
-  // Enable static HTML export for Surge deployment
-  output: 'export',
-}
+  basePath: '/rooh-eval-oms1',
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
